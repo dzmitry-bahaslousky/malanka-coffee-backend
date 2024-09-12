@@ -1,0 +1,24 @@
+# version param is deprecated
+
+services:
+  postgres_db:
+    image: postgres:15-alpine
+    container_name: malanka-postgresql
+    restart: no
+    ports:
+      - "5444:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    networks:
+      - malanka_network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER}" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+networks:
+  malanka_network:
+    driver: bridge

@@ -1,3 +1,12 @@
 spring:
   application:
     name: Malanka Coffee
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:malanka_coffee}
+    username: ${POSTGRES_USERNAME:malanka}
+    password: ${POSTGRES_PASSWORD:malanka}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      # https://www.linkedin.com/feed/update/urn:li:activity:7230882865117315072/
+      ddl-auto: validate
