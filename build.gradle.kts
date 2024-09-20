@@ -2,6 +2,9 @@ plugins {
     id("org.springframework.boot") version "3.3.2"
     id("io.spring.dependency-management") version "1.1.6"
     java
+
+    //https://www.jacoco.org/jacoco/
+    jacoco
 }
 
 group = "com.jcs"
@@ -24,8 +27,6 @@ dependencies {
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
 
-    annotationProcessor("org.hibernate:hibernate-jpamodelgen-jakarta:5.6.15.Final")
-
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.testcontainers:postgresql")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
@@ -47,4 +48,5 @@ java {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport)
 }
