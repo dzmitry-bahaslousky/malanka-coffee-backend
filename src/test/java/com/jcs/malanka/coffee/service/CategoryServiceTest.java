@@ -29,7 +29,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("category service tests")
+@DisplayName("Category Service Tests")
 class CategoryServiceTest {
 
     @Mock

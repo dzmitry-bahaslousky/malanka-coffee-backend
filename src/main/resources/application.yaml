@@ -10,3 +10,4 @@ spring:
     hibernate:
       # https://www.linkedin.com/feed/update/urn:li:activity:7230882865117315072/
       ddl-auto: validate
+    open-in-view: false

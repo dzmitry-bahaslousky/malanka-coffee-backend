@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @RequiredArgsConstructor
-@DisplayName("category service integration tests")
+@DisplayName("Category Service Integration Tests")
 public class CategoryServiceIntegrationTest extends AbstractIntegrationTest {
     private final CategoryService categoryService;
 

@@ -3,8 +3,12 @@ package com.jcs.malanka.coffee.api.rest;
 import com.jcs.malanka.coffee.dto.CategoryDto;
 import com.jcs.malanka.coffee.dto.api.DataWrapper;
 import com.jcs.malanka.coffee.service.CategoryService;
+import com.jcs.malanka.coffee.validation.groups.UpdateGroup;
+import jakarta.validation.Valid;
+import jakarta.validation.groups.Default;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,13 +42,13 @@ public class CategoryController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public DataWrapper<CategoryDto> createCategory(@RequestBody CategoryDto dto) {
+    public DataWrapper<CategoryDto> createCategory(@RequestBody @Valid CategoryDto dto) {
         return new DataWrapper<>(categoryService.create(dto));
     }
 
     @PutMapping
     @ResponseStatus(HttpStatus.OK)
-    public DataWrapper<CategoryDto> updateCategory(@RequestBody CategoryDto dto) {
+    public DataWrapper<CategoryDto> updateCategory(@RequestBody @Validated({UpdateGroup.class, Default.class}) CategoryDto dto) {
         return new DataWrapper<>(categoryService.update(dto));
     }
 
