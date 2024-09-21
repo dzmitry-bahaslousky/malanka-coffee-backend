@@ -1,5 +1,5 @@
 plugins {
-    id("org.springframework.boot") version "3.3.2"
+    id("org.springframework.boot") version "3.3.4"
     id("io.spring.dependency-management") version "1.1.6"
     java
 
@@ -35,9 +35,7 @@ dependencies {
 
     // Force newer versions of dependencies in transitive resolution
     constraints {
-        implementation("org.apache.commons:commons-compress:1.26.0")
-        implementation("org.springframework:spring-webmvc:6.1.13")
-        implementation("org.xmlunit:xmlunit-core:2.10.0")
+        implementation("org.apache.commons:commons-compress:1.26.1")
     }
 }
 
