@@ -35,7 +35,8 @@ dependencies {
 
     // Force newer versions of dependencies in transitive resolution
     constraints {
-        implementation("org.apache.commons:commons-compress:1.26.1")
+        testImplementation("org.apache.commons:commons-compress:1.26.1")
+        testImplementation("org.xmlunit:xmlunit-core:2.10.0")
     }
 }
 
