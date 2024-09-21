@@ -5,7 +5,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 // TODO: GitHub Actions
 // TODO: Dockerfile
-// TODO: Test Coverage
 @SpringBootApplication
 public class MalankaCoffeeApplication {
 
