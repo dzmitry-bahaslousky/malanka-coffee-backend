@@ -32,6 +32,13 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testCompileOnly("org.projectlombok:lombok")
     testAnnotationProcessor("org.projectlombok:lombok")
+
+    // Force newer versions of dependencies in transitive resolution
+    constraints {
+        implementation("org.apache.commons:commons-compress:1.26.0")
+        implementation("org.springframework:spring-webmvc:6.1.13")
+        implementation("org.xmlunit:xmlunit-core:2.10.0")
+    }
 }
 
 configurations {
