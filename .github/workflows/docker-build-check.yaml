@@ -1,9 +1,7 @@
 name: Check Dockerfile Build
 
 on:
-  workflow_run:
-    workflows: [ CI ]
-    types: [ completed ]
+  workflow_call: {}
 
 jobs:
   dockerfile-check:
@@ -20,3 +18,5 @@ jobs:
 
       - name: Build Dockerfile
         uses: docker/build-push-action@v6
+        with:
+          context: .

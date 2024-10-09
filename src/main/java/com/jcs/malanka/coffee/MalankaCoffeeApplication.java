@@ -3,7 +3,9 @@ package com.jcs.malanka.coffee;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-// TODO: Dockerfile
+// TODO: Publish package to DockerHub Action
+// TODO: ELK
+// TODO: P + G
 @SpringBootApplication
 public class MalankaCoffeeApplication {
 
