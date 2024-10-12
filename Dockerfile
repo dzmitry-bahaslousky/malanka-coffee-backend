@@ -3,7 +3,7 @@ FROM eclipse-temurin:21-jdk-jammy AS build
 
 WORKDIR /malanka-build
 
-COPY . .
+COPY --chmod=777 . .
 
 RUN ./gradlew bootJar
 
