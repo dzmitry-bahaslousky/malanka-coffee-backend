@@ -6,6 +6,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 // TODO: Publish package to DockerHub Action
 // TODO: ELK
 // TODO: P + G
+// TODO: OpenTelemetry + Zipkin
+// TODO: Actuator
+// TODO: Kafka/RabbitMQ
 @SpringBootApplication
 public class MalankaCoffeeApplication {
 
