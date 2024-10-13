@@ -1,18 +1,14 @@
+---
 name: CI
 
 on:
-  push:
-    branches: [ 'main' ]
-  pull_request:
-    paths: [ src/** ]
-    types: [ opened, synchronize ]
+  workflow_call: { }
+  workflow_dispatch: { }
 
 jobs:
-  build-and-test:
+  build:
     timeout-minutes: 5
     runs-on: ubuntu-22.04
-    permissions:
-      pull-requests: write
     steps:
       - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 #v4
       - name: Set up JDK 21
@@ -26,8 +22,57 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@d156388eb19639ec20ade50009f3d199ce1e2808 #v4
 
-      - name: Build and Test with Gradle Wrapper
-        run: ./gradlew check bootJar
+      - name: Build with Gradle Wrapper
+        run: ./gradlew bootJar
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          path: .
+          name: ${{ github.event.repository.name }}
+          if-no-files-found: 'error'
+          retention-days: 1
+
+  test:
+    timeout-minutes: 5
+    runs-on: [ ubuntu-22.04 ]
+    needs: [ build ]
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ github.event.repository.name }}
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@b36c23c0d998641eff861008f374ee103c25ac73 #v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      # Configure Gradle for optimal use in GitHub Actions, including caching of downloaded dependencies.
+      # See: https://github.com/gradle/actions/blob/main/setup-gradle/README.md
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@d156388eb19639ec20ade50009f3d199ce1e2808 #v4
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          path: .
+          overwrite: 'true'
+          name: ${{ github.event.repository.name }}
+          if-no-files-found: 'error'
+          retention-days: 1
+
+  test-coverage:
+    timeout-minutes: 5
+    runs-on: [ ubuntu-22.04 ]
+    needs: [ test ]
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ github.event.repository.name }}
 
       - name: Test Coverage
         id: jacoco
@@ -41,13 +86,81 @@ jobs:
           skip-if-no-changes: true
           pass-emoji: ':green_circle:'
           fail-emoji: ':red_circle:'
-      - name: Upload Artifact
+
+  dockerfile-build:
+    needs: [ build, test ]
+    timeout-minutes: 5
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ github.event.repository.name }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Dockerfile
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          tags: ${{ github.event.repository.name }}
+          outputs: type=docker,dest=/tmp/${{ github.event.repository.name }}.tar
+
+      - name: Inspect Image
+        run: docker image inspect ${{ github.event.repository.name }}:latest
+
+      - name: Upload Docker Image
         uses: actions/upload-artifact@v4
         with:
-          path: .
-          name: 'malanka-coffee'
+          name: ${{ github.event.repository.name }}-image
+          path: /tmp/${{ github.event.repository.name }}.tar
+          retention-days: 1
           if-no-files-found: 'error'
-          retention-days: 7
-  docker-build-check:
-    needs: [build-and-test]
-    uses: ./.github/workflows/docker-build-check.yaml
+
+  dockerfile-test:
+    needs: [ dockerfile-build ]
+    timeout-minutes: 10
+    runs-on: ubuntu-22.04
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: malanka
+          POSTGRES_PASSWORD: malanka
+          POSTGRES_DB: malanka_coffee
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ github.event.repository.name }}-image
+          path: /tmp
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Load image
+        run: docker load --input /tmp/${{ github.event.repository.name }}.tar
+
+      - name: Run application container
+        run: docker run --network host -p 8080:8080 -d --rm ${{ github.event.repository.name }}
+
+      - name: Health Check
+        run: |
+          echo "Waiting for Spring Boot application to be ready..."
+          for i in {1..10}; do
+            if curl -s --fail http://localhost:8080/actuator/health | grep -q '"status":"UP"'; then
+              echo "Spring Boot application is up!"
+              break
+            else
+              echo "Spring Boot application is not ready yet. Waiting..."
+              sleep 5
+            fi
+          done
