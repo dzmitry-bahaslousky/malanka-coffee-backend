@@ -13,5 +13,5 @@ act -l
 
 To run CI `.github/workflows/ci.yaml` use
 ```shell
-act -W '.github/workflows/main.yaml'
+act -W '.github/workflows/ci.yaml'
 ```
