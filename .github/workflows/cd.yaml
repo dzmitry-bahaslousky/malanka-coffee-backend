@@ -1,11 +1,10 @@
 name: CD
 
 on:
-  workflow_run:
-    workflows:
-      - CI
-    types:
-      - completed
+  workflow_dispatch: { }
+
+env:
+  REPOSITORY_NAME: ${{ github.event.repository.name }}
 
 jobs:
   build:
@@ -31,16 +30,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           path: .
-          name: ${{ github.event.repository.name }}
+          name: ${{ env.REPOSITORY_NAME }}
           if-no-files-found: 'error'
           retention-days: 1
 
-  push-image:
+  push-docker-ghcr:
     needs: [ build ]
     timeout-minutes: 5
     runs-on: ubuntu-22.04
-    environment:
-      name: production
     env:
       REGISTRY: ghcr.io
       IMAGE_NAME: ${{ github.repository }}
@@ -53,9 +50,9 @@ jobs:
       - name: Download Artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ github.event.repository.name }}
+          name: ${{ env.REPOSITORY_NAME }}
 
-      - name: Log in to the Container registry
+      - name: Login to ghrc.io
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
@@ -86,3 +83,81 @@ jobs:
           subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
+
+  push-docker-hub:
+    needs: [ build ]
+    timeout-minutes: 5
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.REPOSITORY_NAME }}
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ vars.DOCKERHUB_USERNAME }}/${{ env.REPOSITORY_NAME }}:latest
+
+  deploy-google-run:
+    timeout-minutes: 5
+    runs-on: ubuntu-22.04
+    needs: [ push-docker-hub ]
+    environment:
+      name: production-gcp
+    env:
+      PROJECT_ID: 'celestial-air-438620-f9'
+      SERVICE: ${{ github.event.repository.name }}
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      url: ${{ steps.deploy.outputs.url }}
+    steps:
+      - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 #v4
+
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Deploy to Cloud Run
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.SERVICE }}
+          image: ${{ vars.DOCKERHUB_USERNAME }}/${{ env.SERVICE }}:latest
+          flags: '--allow-unauthenticated'
+          env_vars: |-
+            POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
+
+  health-check-google-run:
+    timeout-minutes: 5
+    runs-on: ubuntu-22.04
+    needs: [ deploy-google-run ]
+    steps:
+      - name: Health Check
+        run: |
+          echo "Waiting for Spring Boot application to be ready..."
+          for i in {1..10}; do
+            if curl -s --fail ${{ needs.deploy-google-run.outputs.url }}/actuator/health | grep -q '"status":"UP"'; then
+              echo "Spring Boot application is up!"
+              break
+            else
+              echo "Spring Boot application is not ready yet. Waiting..."
+              sleep 5
+            fi
+          done
