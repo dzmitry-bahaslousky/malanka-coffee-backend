@@ -1,5 +1,7 @@
 # Malanka Coffee
 
+[![codecov](https://codecov.io/github/dzmitry-bahaslousky/malanka-coffee-backend/graph/badge.svg?token=U3PAQIVNI8)](https://codecov.io/github/dzmitry-bahaslousky/malanka-coffee-backend)
+
 ## Run GitHub Actions Locally
 
 To run a GitHub Action locally, you can use the tool called act. 
