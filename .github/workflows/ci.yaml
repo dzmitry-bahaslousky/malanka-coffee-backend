@@ -57,6 +57,12 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@d156388eb19639ec20ade50009f3d199ce1e2808 #v4
 
+      - name: Set execute permissions
+        run: chmod +x ./gradlew
+
+      - name: Test with Gradle Wrapper
+        run: ./gradlew check
+
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -79,18 +85,10 @@ jobs:
         with:
           name: ${{ github.event.repository.name }}
 
-      - name: Test Coverage
-        id: jacoco
-        uses: madrapps/jacoco-report@e4bbaf00a0b8920cb86a448ae3ec0fc6f6bfeacc #v1.7.1
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
         with:
-          paths: ${{ github.workspace }}/build/reports/jacoco/jacocoTestReport.xml
-          token: ${{ secrets.GITHUB_TOKEN }}
-          title: Coverage Report
-          update-comment: true
-          continue-on-error: false
-          skip-if-no-changes: true
-          pass-emoji: ':green_circle:'
-          fail-emoji: ':red_circle:'
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   dockerfile-build:
     needs: [ build ]
