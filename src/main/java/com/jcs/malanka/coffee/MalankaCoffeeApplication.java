@@ -13,4 +13,9 @@ public class MalankaCoffeeApplication {
         SpringApplication.run(MalankaCoffeeApplication.class, args);
     }
 
+    public void test() {
+        int i = 10;
+        System.out.println(i);
+    }
+
 }
