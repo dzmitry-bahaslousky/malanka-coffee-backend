@@ -91,7 +91,7 @@ jobs:
 
       - name: Validate codecov.yml
         run: |
-          response=$(curl --write-out "%{http_code}" --silent --output - --data-binary @.github/codecov.yml https://codecov.io/validate)
+          response=$(curl --write-out "%{http_code}" --silent --output - --data-binary @codecov.yml https://codecov.io/validate)
           http_code=$(echo "$response" | tail -n1)
           body=$(echo "$response" | sed '$d')
           echo "Response body:"
