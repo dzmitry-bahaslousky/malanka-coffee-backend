@@ -71,7 +71,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           path: .
-          include-hidden-files: true
           overwrite: 'true'
           name: ${{ github.event.repository.name }}
           if-no-files-found: 'error'
@@ -91,13 +90,11 @@ jobs:
 
       - name: Validate codecov.yml
         run: |
-          response=$(curl --write-out "%{http_code}" --silent --output - --data-binary @.github/codecov.yml https://codecov.io/validate)
+          response=$(curl --write-out "%{http_code}" --silent --output - --data-binary @codecov.yml https://codecov.io/validate)
           http_code=$(echo "$response" | tail -n1)
           body=$(echo "$response" | sed '$d')
-
           echo "Response body:"
           echo "$body"
-        
           if [ "$http_code" -eq 200 ]; then
             echo "Success: Status code 200"
           else
